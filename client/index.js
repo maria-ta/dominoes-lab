@@ -1,451 +1,337 @@
-const MAX_NUMBER = 7;
+const BASE_URL = '';
+const HTML_IDS = {
+  inputTable: 'input-table',
+  inputTableCell: 'input-table-cell',
+  takenCardsTable: 'taken-cards-table',
+  takenCardCell: 'taken-card-cell',
+  submitButton: 'submit',
+};
+const CONTROL_KEYS_CALLBACKS = {
+  w: combineWithTop,
+  d: combineWithRight,
+  s: combineWithBottom,
+  a: combineWithLeft,
+  c: clearPosition,
+};
 
-/**
- * @type {{ resultTable: string, nextGuesses: number[]}[]}
- */
-const guessingStack = []; // { resultTable: string, nextGuesses: []}
+let conditions;
+let initialTable = {
+  numbers: [],
+  positions: [],
+};
+let takenCardsTable;
 
-let result = [];
-let availabilityTable = [];
-let takenCardsTable = createZeroFilledArrayOfLength(MAX_NUMBER).map(() =>
-  createZeroFilledArrayOfLength(MAX_NUMBER).map(() => 0),
-);
-
-let anyCellWasChanged = false;
-
-/**
- * Removes all children nodes from HTML element
- * @param {HtmlElement} element HTML element
- */
-function clearElement(element) {
-  while (!!element.firstChild) {
-    element.removeChild(element.firstChild);
-  }
+function get(url) {
+  return fetch(url).then((response) => response.json());
 }
 
-/**
- * Displays unutual table on the screen in the element with id 'initial-table'
- * @param {number[][]} initialTable
- */
-function displayInitialTable(initialTable) {
-  const element = document.getElementById('initial-table');
-  const body = document.createElement('tbody');
-
-  initialTable.forEach((row) => {
-    const rowElement = document.createElement('tr');
-
-    row.forEach((cell) => {
-      const cellElement = document.createElement('td');
-      cellElement.innerText = cell;
-      rowElement.appendChild(cellElement);
-    });
-
-    body.appendChild(rowElement);
-  });
-
-  element.appendChild(body);
+function post(url, body) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then((response) => response.json());
 }
 
-/**
- * Creates an array of specified length filled with `0`
- * @param {number} length
- * @returns {number[]} an array of specified length filled with `0`
- */
-function createZeroFilledArrayOfLength(length) {
-  return Array.apply(null, Array(length)).map(Number.prototype.valueOf, 0);
+function createArrayOfLengthFilledWith0(length) {
+  return [...Array(length)].map(Number.prototype.valueOf, 0);
 }
 
-/**
- * Adds coordinates of `card` to `availability table`.
- * @param {number[]} card in format [number, number]
- * @param {number[]} coordinates1 in format [number, number]
- * @param {number[]} coordinates2 in format [number, number]
- */
-function updateAvailabilityOfCard([a, b], [i, j], [x, y]) {
-  const card = availabilityTable[Math.min(a, b)][Math.max(a, b)];
-  card.quantity += 1;
-  if (x > i || y > j) {
-    card.coordinates.push([
-      [i, j],
-      [x, y],
-    ]);
+function getConditions() {
+  return get(`${BASE_URL}/conditions`);
+}
+
+function hasNumber(i, j) {
+  const value = initialTable.numbers[i][j];
+  return !!value || value === 0;
+}
+
+function hasPosition(i, j) {
+  const position = initialTable.positions[i][j];
+  return !!position;
+}
+
+function isCardTaken(a, b) {
+  return takenCardsTable[Math.max(a, b)][Math.min(a, b)];
+}
+
+function markAsTaken(a, b, isTaken = true) {
+  takenCardsTable[Math.max(a, b)][Math.min(a, b)] = isTaken;
+}
+
+function getInputTableCellId(i, j) {
+  return `${HTML_IDS.inputTableCell}-${i}-${j}`;
+}
+
+function rerenderTakenCard(a, b) {
+  const [i, j] = [Math.max(a, b), Math.min(a, b)];
+  const cell = document.getElementById(getTakenCardCellId(i, j));
+  if (isCardTaken(i, j)) {
+    cell.classList.add('selected');
   } else {
-    card.coordinates.push([
-      [x, y],
-      [i, j],
-    ]);
+    cell.classList.remove('selected');
   }
 }
 
-/**
- * Updates result table with card data
- * @param {string[][]} result a result table, where each cell is has following values: ''| 't' | 'l' | 'r' | 'b'
- * @param {number[][]} card [card, cardCoordinates1, cardCoordinates2]
- */
-function updateResultWithCoordinates([[a, b], [x, y], [i, j]]) {
-  if (result[x][y] || result[i][j]) {
-    displayResultTable(initialTable, result);
-    throw new Error(
-      `The place is taken already! ${a}-${b} [${x}, ${y}], [${i}, ${j}]. It's ${result[x][y]} and ${result[i][j]}`,
-    );
-  }
-  if (takenCardsTable[Math.min(a, b)][Math.max(a, b)] > 0) {
-    displayResultTable(initialTable, result);
-    throw new Error(
-      `The card is taken already! ${a}-${b} [${x}, ${y}], [${i}, ${j}].`,
-    );
-  }
-  if (x !== i) {
-    //t, b
-    if (x > i) {
-      result[x][y] = 'b';
-      result[i][j] = 't';
-    } else {
-      result[x][y] = 't';
-      result[i][j] = 'b';
-    }
+function rerenderPosition(i, j) {
+  const cell = document.getElementById(getInputTableCellId(i, j));
+  const position = initialTable.positions[i][j];
+  if (position) {
+    cell.classList.add(position);
   } else {
-    //l, r
-    if (y > j) {
-      result[x][y] = 'r';
-      result[i][j] = 'l';
-    } else {
-      result[x][y] = 'l';
-      result[i][j] = 'r';
-    }
-  }
-  takenCardsTable[Math.min(a, b)][Math.max(a, b)] = 1;
-}
-
-/**
- *
- * @returns {{quantity: number; coordinates: number[][]}[]} an array filled with default values for an `availabilityTable`: `{quantity: 0, coordinates: []}`
- */
-function createAvailabilityTable() {
-  return createZeroFilledArrayOfLength(MAX_NUMBER).map(() =>
-    createZeroFilledArrayOfLength(MAX_NUMBER).map(() => ({
-      quantity: 0,
-      coordinates: [],
-    })),
-  );
-}
-
-function solveProblem(initialTable) {
-  let counter = 0;
-
-  result = initialTable.map((row) => row.map((cell) => null));
-
-  do {
-    availabilityTable = createAvailabilityTable();
-    anyCellWasChanged = false;
-
-    initialTable.forEach((row, i) => {
-      row.forEach((cell, j) => {
-        if (!result[i][j]) {
-          checkCell(i, j);
-        }
-      });
-    });
-    availabilityTable.forEach((row, a) => {
-      row.forEach((cell, b) => {
-        const wasCardTaken =
-          takenCardsTable[Math.min(a, b)][Math.max(a, b)] > 0;
-        if (
-          cell.quantity === 1 &&
-          !wasCardTaken &&
-          !wasPlaceByCoordinatesTaken(cell.coordinates[0])
-        ) {
-          updateResultWithCoordinates([[a, b], ...cell.coordinates[0]]);
-          displayResultTable(initialTable, result);
-          anyCellWasChanged = true;
-        }
-      });
-    });
-
-    const noCellWasChanged = !anyCellWasChanged;
-    if (noCellWasChanged) {
-      if (isProblemSolved()) {
-        return result;
-      } else {
-        guess();
-      }
-    }
-
-    displayResultTable(initialTable, result);
-    counter++;
-  } while (anyCellWasChanged && counter < 100);
-
-  return result;
-}
-
-function isProblemSolved() {
-  for (let i = 0; i < result.length; i++) {
-    for (let j = 0; j < result.length; j++) {
-      if (!result[i][j]) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-function wasPlaceByCoordinatesTaken(coordinates) {
-  const [[x, y], [i, j]] = coordinates;
-  return !!result[x][y] || !!result[i][j];
-}
-
-/**
- *
- * @param {number} i
- * @param {number} j
- */
-function checkCell(i, j) {
-  const row = initialTable[i];
-  const cell = row[j];
-  // [[a,b], [i,j], [x,y]]
-  const allVariants = [];
-  let lastVariant = [];
-  let numberOfPossibleVariants = 0;
-  if (j + 1 < row.length && !result[i][j + 1]) {
-    const variant = [
-      [cell, initialTable[i][j + 1]],
-      [i, j],
-      [i, j + 1],
-    ];
-    if (initialTable[i][j + 1] >= cell) {
-      allVariants.push(variant);
-    }
-    lastVariant = variant;
-    numberOfPossibleVariants += 1;
-  }
-  if (i + 1 < initialTable.length && !result[i + 1][j]) {
-    const variant = [
-      [cell, initialTable[i + 1][j]],
-      [i, j],
-      [i + 1, j],
-    ];
-    if (initialTable[i + 1][j] >= cell) {
-      allVariants.push(variant);
-    }
-    lastVariant = variant;
-    numberOfPossibleVariants += 1;
-  }
-  if (j - 1 >= 0 && !result[i][j - 1]) {
-    const variant = [
-      [cell, initialTable[i][j - 1]],
-      [i, j],
-      [i, j - 1],
-    ];
-    if (initialTable[i][j - 1] >= cell) {
-      allVariants.push(variant);
-    }
-    lastVariant = variant;
-    numberOfPossibleVariants += 1;
-  }
-  if (i - 1 >= 0 && !result[i - 1][j]) {
-    const variant = [
-      [cell, initialTable[i - 1][j]],
-      [i, j],
-      [i - 1, j],
-    ];
-    if (initialTable[i - 1][j] >= cell) {
-      allVariants.push(variant);
-    }
-    lastVariant = variant;
-    numberOfPossibleVariants += 1;
-  }
-
-  if (numberOfPossibleVariants === 1) {
-    try {
-      const [a, b] = lastVariant[0];
-      updateResultWithCoordinates(lastVariant);
-      displayResultTable(initialTable, result);
-      anyCellWasChanged = true;
-    } catch (e) {
-      console.error('Here we go');
-    }
-  } else {
-    allVariants.forEach(([ab, ij, xy]) => {
-      updateAvailabilityOfCard(ab, ij, xy);
-    });
+    cell.classList.remove('t');
+    cell.classList.remove('r');
+    cell.classList.remove('b');
+    cell.classList.remove('l');
   }
 }
 
-function guess(except) {
-  const [[a, b], cell] = findFirstWithMoreThanOnePossibleVariants(except);
-  if (cell) {
-    updateGuessingStack([a, b], cell);
-    updateResultWithCoordinates([[a, b], ...cell.coordinates[0]]);
-    anyCellWasChanged = true;
-  } else {
-    revert();
-  }
-}
+function clearPosition(i, j) {
+  const position = initialTable.positions[i][j];
 
-function revert() {
-  if (guessingStack.length) {
-    const previousGuess = guessingStack.pop();
-    const nextCoordinates = previousGuess.nextGuesses;
-
-    result = JSON.parse(previousGuess.result);
-    takenCardsTable = JSON.parse(previousGuess.takenCardsTable);
-    availabilityTable = JSON.parse(previousGuess.availabilityTable);
-
-    updateResultWithCoordinates([previousGuess.ab, ...nextCoordinates[0]]);
-
-    nextCoordinates.splice(0, 1);
-
-    if (nextCoordinates.length) {
-      const guessingStackItem = {
-        ab: previousGuess.ab,
-        result: JSON.stringify(result),
-        nextGuesses: nextCoordinates,
-        except: previousGuess.except,
-      };
-      guessingStack.push(guessingStackItem);
-    } else {
-      const [a, b] = previousGuess.ab;
-      previousGuess.except.push(`${Math.min(a, b)}${Math.max(a, b)}`);
-      guess(previousGuess.except);
+  let anotherPosition;
+  switch (position) {
+    case 't': {
+      anotherPosition = [i - 1, j];
+      break;
     }
-  } else {
-    console.log('You have no choice :(');
+    case 'r': {
+      anotherPosition = [i, j - 1];
+      break;
+    }
+    case 'b': {
+      anotherPosition = [i + 1, j];
+      break;
+    }
+    case 'l': {
+      anotherPosition = [i, j + 1];
+      break;
+    }
   }
+  const [x, y] = anotherPosition;
+
+  initialTable.positions[x][y] = null;
+  initialTable.positions[i][j] = null;
+  rerenderPosition(x, y);
+  rerenderPosition(i, j);
+
+  const a = initialTable.numbers[i][j];
+  const b = initialTable.numbers[x][y];
+  markAsTaken(a, b, false);
+  rerenderTakenCard(a, b);
 }
 
-function updateGuessingStack([a, b], cell) {
-  const cellCoordinatesCopy = JSON.parse(JSON.stringify(cell.coordinates));
-  cellCoordinatesCopy.splice(0, 1);
-  const guessingStackItem = {
-    ab: [a, b],
-    result: JSON.stringify(result),
-    takenCardsTable: JSON.stringify(takenCardsTable),
-    availabilityTable: JSON.stringify(availabilityTable),
-    nextGuesses: cellCoordinatesCopy,
-    except: [],
+function combineWithTop(i, j) {
+  const [x, y] = [i - 1, j];
+  const hasSpaceOnTop = (i, j) => {
+    const hasCellOnTop = i > 0;
+    return hasCellOnTop && hasNumber(x, y) && !hasPosition(x, y);
   };
-  guessingStack.push(guessingStackItem);
+  const couldBeCombinedWithTop = (i, j) => {
+    const cell = initialTable.numbers[i][j];
+    const topCell = initialTable.numbers[x][y];
+    return !hasPosition(i, j) && !isCardTaken(cell, topCell);
+  };
+
+  if (hasSpaceOnTop(i, j) && couldBeCombinedWithTop(i, j)) {
+    const a = initialTable.numbers[i][j];
+    const b = initialTable.numbers[x][y];
+    markAsTaken(a, b, true);
+    rerenderTakenCard(a, b);
+    initialTable.positions[i][j] = 'b';
+    initialTable.positions[x][y] = 't';
+    rerenderPosition(i, j);
+    rerenderPosition(x, y);
+  }
 }
 
-function findFirstWithMoreThanOnePossibleVariants(except) {
-  except = except || [];
-  for (let n = 2; n < 100; n++) {
-    for (let a = 0; a < availabilityTable.length; a++) {
-      const row = availabilityTable[a];
-      for (let b = 0; b < row.length; b++) {
-        const cell = row[b];
-        const wasCardTaken =
-          takenCardsTable[Math.min(a, b)][Math.max(a, b)] > 0;
-        const shouldNotSkipThisCell = !(
-          except.includes(`${a}${b}`) || except.includes(`${b}${a}`)
-        );
-        if (cell.quantity === n && !wasCardTaken && shouldNotSkipThisCell) {
-          return [[a, b], cell];
-        }
-      }
+function combineWithBottom(i, j) {
+  const [x, y] = [i + 1, j];
+  const hasSpaceOnBottom = (i, j) => {
+    const hasCellOnBottom = i < conditions.height - 1;
+    return hasCellOnBottom && hasNumber(x, y) && !hasPosition(x, y);
+  };
+  const couldBeCombinedWithBottom = (i, j) => {
+    const cell = initialTable.numbers[i][j];
+    const bottomCell = initialTable.numbers[x][y];
+    return !hasPosition(i, j) && !isCardTaken(cell, bottomCell);
+  };
+
+  if (hasSpaceOnBottom(i, j) && couldBeCombinedWithBottom(i, j)) {
+    const a = initialTable.numbers[i][j];
+    const b = initialTable.numbers[x][y];
+    markAsTaken(a, b, true);
+    rerenderTakenCard(a, b);
+    initialTable.positions[i][j] = 't';
+    initialTable.positions[x][y] = 'b';
+    rerenderPosition(i, j);
+    rerenderPosition(x, y);
+  }
+}
+
+function combineWithRight(i, j) {
+  const [x, y] = [i, j + 1];
+  const hasSpaceOnRight = (i, j) => {
+    const hasCellOnRight = j < conditions.width - 1;
+    return hasCellOnRight && hasNumber(x, y) && !hasPosition(x, y);
+  };
+  const couldBeCombinedWithRight = (i, j) => {
+    const cell = initialTable.numbers[i][j];
+    const rightCell = initialTable.numbers[x][y];
+    return !hasPosition(i, j) && !isCardTaken(cell, rightCell);
+  };
+
+  if (hasSpaceOnRight(i, j) && couldBeCombinedWithRight(i, j)) {
+    const a = initialTable.numbers[i][j];
+    const b = initialTable.numbers[x][y];
+    markAsTaken(a, b, true);
+    rerenderTakenCard(a, b);
+    initialTable.positions[i][j] = 'l';
+    initialTable.positions[x][y] = 'r';
+    rerenderPosition(i, j);
+    rerenderPosition(x, y);
+  }
+}
+
+function combineWithLeft(i, j) {
+  const [x, y] = [i, j - 1];
+  const hasSpaceOnLeft = (i, j) => {
+    const hasCellOnLeft = j > 0;
+    return hasCellOnLeft && hasNumber(x, y) && !hasPosition(x, y);
+  };
+  const couldBeCombinedWithLeft = (i, j) => {
+    const cell = initialTable.numbers[i][j];
+    const leftCell = initialTable.numbers[x][y];
+    return !hasPosition(i, j) && !isCardTaken(cell, leftCell);
+  };
+
+  if (hasSpaceOnLeft(i, j) && couldBeCombinedWithLeft(i, j)) {
+    const a = initialTable.numbers[i][j];
+    const b = initialTable.numbers[x][y];
+    markAsTaken(a, b, true);
+    rerenderTakenCard(a, b);
+    initialTable.positions[i][j] = 'r';
+    initialTable.positions[x][y] = 'l';
+    rerenderPosition(i, j);
+    rerenderPosition(x, y);
+  }
+}
+
+function keyDownOnCell(i, j, event) {
+  const key = event.key;
+  const isControlKey = Object.keys(CONTROL_KEYS_CALLBACKS).includes(key);
+  if (isControlKey) {
+    CONTROL_KEYS_CALLBACKS[key](i, j);
+  }
+}
+
+function changeCellValue(i, j, event) {
+  const value = event.target.value;
+  if (value < conditions.minCellValue) {
+    event.target.value = conditions.minCellValue;
+  } else if (value > conditions.maxCellValue) {
+    event.target.value = conditions.maxCellValue;
+  }
+  initialTable.numbers[i][j] = event.target.value;
+}
+
+function createInputTable() {
+  const table = document.getElementById(HTML_IDS.inputTable);
+  for (let i = 0; i < conditions.height; i++) {
+    const row = document.createElement('tr');
+    for (let j = 0; j < conditions.width; j++) {
+      const cell = document.createElement('td');
+      const input = document.createElement('input');
+      cell.setAttribute('id', getInputTableCellId(i, j));
+      cell.setAttribute('id', getInputTableCellId(i, j));
+      input.setAttribute('type', 'number');
+      input.setAttribute('step', 1);
+      input.setAttribute('min', conditions.minCellValue);
+      input.setAttribute('max', conditions.maxCellValue);
+      input.addEventListener('keydown', (event) => {
+        keyDownOnCell(i, j, event);
+      });
+      input.addEventListener('input', (event) => {
+        changeCellValue(i, j, event);
+      });
+      cell.appendChild(input);
+      row.appendChild(cell);
     }
+    table.appendChild(row);
   }
-  return [[null, null], null];
 }
 
-/**
- * Displays result table on the screen
- * @param {number[][]} initialTable a table with numbers
- * @param {(''| 't' | 'l' | 'r' | 'b') [][]} resultTable a result table, where each cell is has following values: ''| 't' | 'l' | 'r' | 'b'
- * @param {string} id an optional id for HTML element (by default is 'result-table')
- */
-function displayResultTable(initialTable, resultTable, id) {
-  const body = document.createElement('tbody');
-  const element = document.getElementById(id || 'result-table');
-
-  clearElement(element);
-
-  resultTable.forEach((row, i) => {
-    const rowElement = document.createElement('tr');
-
-    row.forEach((cell, j) => {
-      const cellElement = document.createElement('td');
-      cellElement.innerText = initialTable[i][j];
-      cellElement.classList.add(cell);
-      if (cell) {
-        cellElement.classList.add('completed');
-      }
-      rowElement.appendChild(cellElement);
-    });
-
-    body.appendChild(rowElement);
+function setupInitialTable() {
+  initialTable.numbers = createArrayOfLengthFilledWith0(conditions.height).map(
+    () => {
+      return createArrayOfLengthFilledWith0(conditions.width).map(() => null);
+    },
+  );
+  initialTable.positions = createArrayOfLengthFilledWith0(
+    conditions.height,
+  ).map(() => {
+    return createArrayOfLengthFilledWith0(conditions.width).map(() => null);
   });
-
-  element.appendChild(body);
 }
 
-/**
- * Displays cards availability table on the screen
- */
-function displayTakenCardsTable() {
-  const body = document.createElement('tbody');
-  const element = document.getElementById('availability-table');
-  const firstRowElement = document.createElement('tr');
-  const cornerCell = document.createElement('td');
+function submitInitialTable() {
+  post(`${BASE_URL}/solve`, { initialTable: initialTable.numbers });
+}
 
-  clearElement(element);
+function getTakenCardsTableSize() {
+  return conditions.maxCellValue - conditions.minCellValue + 1;
+}
 
-  firstRowElement.appendChild(cornerCell);
+function getTakenCardCellId(i, j) {
+  return `${HTML_IDS.takenCardCell}-${i}-${j}`;
+}
 
-  for (let i = 0; i < MAX_NUMBER; i++) {
-    const cellElement = document.createElement('td');
-    cellElement.innerText = i;
-    firstRowElement.appendChild(cellElement);
+function createTakenCardsTable() {
+  const size = getTakenCardsTableSize();
+  const table = document.getElementById(HTML_IDS.takenCardsTable);
+
+  const firstRow = document.createElement('tr');
+  const firstCell = document.createElement('td');
+  firstRow.appendChild(firstCell);
+  for (let j = 0; j < size; j++) {
+    const cell = document.createElement('td');
+    cell.innerText = j;
+    firstRow.appendChild(cell);
   }
-  body.appendChild(firstRowElement);
+  table.appendChild(firstRow);
 
-  takenCardsTable.forEach((row, i) => {
-    const rowElement = document.createElement('tr');
+  for (let i = 0; i < size; i++) {
+    const row = document.createElement('tr');
     const firstCell = document.createElement('td');
     firstCell.innerText = i;
-    rowElement.appendChild(firstCell);
-
-    row.forEach((cell, j) => {
-      const cellElement = document.createElement('td');
-      if (j >= i) {
-        const cssClass = cell > 0 ? 'taken' : 'not-taken';
-        cellElement.innerText = cell > 0 ? '+' : '0';
-        cellElement.classList.add(cssClass);
+    row.appendChild(firstCell);
+    for (let j = 0; j < size; j++) {
+      const cell = document.createElement('td');
+      cell.setAttribute('id', getTakenCardCellId(i, j));
+      if (i < j) {
+        cell.classList.add('inactive');
       }
-      rowElement.appendChild(cellElement);
-    });
-
-    body.appendChild(rowElement);
-  });
-
-  element.appendChild(body);
+      row.appendChild(cell);
+    }
+    table.appendChild(row);
+  }
 }
 
-const initialTable = [
-  [4, 6, 2, 5, 5, 2, 0, 1],
-  [0, 4, 4, 0, 0, 1, 6, 3],
-  [2, 4, 4, 1, 1, 3, 1, 5],
+function setupTakenCardsTable() {
+  const size = getTakenCardsTableSize();
+  takenCardsTable = createArrayOfLengthFilledWith0(size).map(() => {
+    return createArrayOfLengthFilledWith0(size);
+  });
+}
 
-  [2, 5, 0, 2, 2, 2, 0, 0],
+getConditions().then((response) => {
+  conditions = response;
+  setupInitialTable();
+  createInputTable();
+  setupTakenCardsTable();
+  createTakenCardsTable();
+});
 
-  [5, 3, 3, 6, 4, 1, 3, 5],
-  [1, 4, 1, 4, 5, 6, 6, 5],
-  [6, 6, 3, 0, 3, 3, 6, 2],
-];
-const expectedResultTable = [
-  ['l', 'r', 't', 'l', 'r', 't', 't', 't'],
-  ['t', 't', 'b', 'l', 'r', 'b', 'b', 'b'],
-  ['b', 'b', 't', 'l', 'r', 't', 't', 't'],
-
-  ['l', 'r', 'b', 'l', 'r', 'b', 'b', 'b'],
-
-  ['t', 't', 'l', 'r', 't', 't', 'l', 'r'],
-  ['b', 'b', 'l', 'r', 'b', 'b', 'l', 'r'],
-  ['l', 'r', 'l', 'r', 'l', 'r', 'l', 'r'],
-];
-
-displayInitialTable(initialTable);
-displayResultTable(initialTable, expectedResultTable, 'expected-result-table');
-solveProblem(initialTable);
-
-displayTakenCardsTable();
+document.getElementById(HTML_IDS.submitButton).addEventListener('click', () => {
+  submitInitialTable();
+});

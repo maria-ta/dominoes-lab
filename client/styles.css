@@ -30,6 +30,10 @@ h1 {
     justify-content: space-between;
 }
 
+h2 {
+    margin-bottom: 1rem !important;
+}
+
 section {
     margin-bottom: 2rem;
 }
@@ -63,7 +67,11 @@ td.b {
     border-top: 1px dashed grey !important;
 }
 
-td.completed {
+td.inactive {
+    background-color: lightgray;
+}
+
+td.completed, td.selected {
     background-color: #7EB09B;
 }
 
@@ -73,4 +81,20 @@ td.taken {
 
 td.not-taken {
     background-color: #FAC05E;
+}
+
+td input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: none;
+    text-align: center;
+}
+
+.sections {
+    display: flex;
+}
+
+.left-section {
+    margin-right: 3rem;
 }

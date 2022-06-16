@@ -1,14 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { WrongArgumentError } from '../../models/errors/wrong-argument-error';
 import TABLE_CONSTANTS from '../../constants/table.const';
+import { HelperService } from '../helper/helper.service';
 
 @Injectable()
 export class TableValidatorService {
+  constructor(private readonly helperService: HelperService) {}
+
   checkTable(initialTable: number[][]): void {
     if (this.isOfIncorrectSize(initialTable)) {
       throw new WrongArgumentError('Incorrect size of initial table');
     } else if (this.hasSomeInvalidCells(initialTable)) {
       throw new WrongArgumentError('Invalid cell(s) in initial table');
+    } else if (this.hasAnInvalidNumberOfValuesOccurrence(initialTable)) {
+      throw new WrongArgumentError(
+        'Invalid initial table. No solution available',
+      );
     }
   }
 
@@ -27,6 +34,26 @@ export class TableValidatorService {
           cell < TABLE_CONSTANTS.minCellValue ||
           cell > TABLE_CONSTANTS.maxCellValue,
       ),
+    );
+  }
+
+  private hasAnInvalidNumberOfValuesOccurrence(
+    initialTable: number[][],
+  ): boolean {
+    const numberOfDifferentValues =
+      TABLE_CONSTANTS.maxCellValue - TABLE_CONSTANTS.minCellValue;
+    const numbersOfValuesOccurrence =
+      this.helperService.createZeroFilledArrayOfLength(numberOfDifferentValues);
+
+    initialTable.forEach((row) => {
+      row.forEach((cell) => {
+        numbersOfValuesOccurrence[cell - TABLE_CONSTANTS.minCellValue] += 1;
+      });
+    });
+
+    return numbersOfValuesOccurrence.some(
+      (valueQuantity) =>
+        valueQuantity !== TABLE_CONSTANTS.numberOfEachValueOccurrence,
     );
   }
 }

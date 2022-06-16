@@ -1,35 +1,35 @@
-<html>
+<html lang="ua">
     <head>
-        <title>Lab 1</title>
+        <title>Доміно</title>
         <link rel="stylesheet" href="styles.css">
         <link rel="stylesheet" href="bootstrap.css">
     </head>
     <body>
         <main>
-            <h1>Lab1</h1>
+            <h1>Доміно</h1>
 
-        <div class="container">
-            <section>
-                <h2>Умова</h2>
-                <table id="initial-table"></table>
-            </section>
+            <div class="sections">
+                <section class="left-section">
+                    <h2>Умова</h2>
+                    <table id="input-table"></table>
+                </section>
 
-            <section>
-                <h2>Використані картки</h2>
-                <table id="availability-table"></table>
-            </section>
-    
-            <section>
-                <h2>Результат</h2>
-                <table id="result-table"></table>
-            </section>
-    
-            <section>
-                <h2>Очікуваний результат</h2>
-                <table id="expected-result-table"></table>
-            </section>
-    
-        </div>
+                <div class="right-section">
+                    <section class="taken-cards-table">
+                        <h2>Використані картки</h2>
+                        <table id="taken-cards-table"></table>
+                    </section>
+
+                    <section class="legend">
+                        <h2>Легенда</h2>
+                    </section>
+
+                    <section class="buttons">
+                        <button id="submit" class="btn btn-primary">Вирішити</button>
+                        <button id="validate" class="btn btn-secondary">Валідувати</button>
+                    </section>
+                </div>
+            </div>
         </main>
 
         <script src="index.js"></script>
