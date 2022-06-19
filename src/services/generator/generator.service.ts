@@ -6,8 +6,8 @@ import { WrongArgumentError } from '../../models/errors/wrong-argument-error';
 import logger from '../../utils/logger';
 import { logMethodInfo } from '../../decorators/log-method-info.decorator';
 
-const MAX_NUMBER_OF_ITERATIONS = 10000;
-const MAX_NUMBER_OF_RETRIES = 100;
+const MAX_NUMBER_OF_ITERATIONS = 1000;
+const MAX_NUMBER_OF_RETRIES = 10;
 
 @Injectable()
 export class GeneratorService {
@@ -33,11 +33,6 @@ export class GeneratorService {
             logger.debug('------------------------------------------');
             logger.debug(`                   Cell #${j}`);
             if (!cell) {
-              if (!this.cards.length) {
-                throw new WrongArgumentError(
-                  'Cannot generate table. Please try again',
-                );
-              }
               const randomCard = this.spliceRandomElementFromAnArray(
                 this.cards,
               );
@@ -53,8 +48,8 @@ export class GeneratorService {
         iterationCounter++;
         isGenerationInProgress = this.isGenerationInProgress();
       } while (
-        (iterationCounter < MAX_NUMBER_OF_ITERATIONS ||
-          isGenerationInProgress) &&
+        (isGenerationInProgress ||
+          iterationCounter < MAX_NUMBER_OF_ITERATIONS) &&
         this.anyCellWasChanged
       );
     } catch (e) {
@@ -164,12 +159,8 @@ export class GeneratorService {
     this.field.numbers[i][j] = b;
 
     let labels: string[];
-    if (x > i) {
-      labels = ['b', 't'];
-    } else if (x < i) {
+    if (x < i) {
       labels = ['t', 'b'];
-    } else if (y > j) {
-      labels = ['r', 'l'];
     } else {
       labels = ['l', 'r'];
     }
