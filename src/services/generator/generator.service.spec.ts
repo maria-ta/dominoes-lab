@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GeneratorService } from './generator.service';
 import { HelperService } from '../helper/helper.service';
 import { TableValidatorService } from '../table-validator/table-validator.service';
-import exp from "constants";
 
 describe('GeneratorService', () => {
   let service: GeneratorService;
