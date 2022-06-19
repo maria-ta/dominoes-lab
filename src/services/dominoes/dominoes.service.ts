@@ -462,22 +462,20 @@ export class DominoesService {
     cell: Cell;
   } {
     except = except || [];
-    for (let n = 2; n < 100; n++) {
-      for (let a = 0; a < this.availabilityTable.length; a++) {
-        const row = this.availabilityTable[a];
-        for (let b = 0; b < row.length; b++) {
-          const cell = row[b];
-          const wasCardTaken =
-            this.takenCardsTable[Math.max(a, b)][Math.min(a, b)] > 0;
-          const shouldNotSkipThisCell = !(
-            except.includes(`${a}${b}`) || except.includes(`${b}${a}`)
-          );
-          if (cell.quantity === n && !wasCardTaken && shouldNotSkipThisCell) {
-            return {
-              ab: [a, b],
-              cell: cell,
-            };
-          }
+    for (let a = 0; a < this.availabilityTable.length; a++) {
+      const row = this.availabilityTable[a];
+      for (let b = 0; b < row.length; b++) {
+        const cell = row[b];
+        const wasCardTaken =
+          this.takenCardsTable[Math.max(a, b)][Math.min(a, b)] > 0;
+        const shouldNotSkipThisCell = !(
+          except.includes(`${a}${b}`) || except.includes(`${b}${a}`)
+        );
+        if (cell.quantity === 2 && !wasCardTaken && shouldNotSkipThisCell) {
+          return {
+            ab: [a, b],
+            cell: cell,
+          };
         }
       }
     }
