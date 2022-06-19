@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { catchError, Observable } from 'rxjs';
 import { WrongArgumentError } from '../models/errors/wrong-argument-error';
+import logger from "../utils/logger";
 
 const DEFAULT_ERROR_MESSAGE = 'An error has occurred';
 
@@ -16,8 +17,7 @@ export class ErrorHandlingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       catchError((error) => {
-        console.error(error.message);
-        console.error(error.stack);
+        this.logError(error);
         if (error instanceof WrongArgumentError) {
           throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
         } else {
@@ -28,5 +28,10 @@ export class ErrorHandlingInterceptor implements NestInterceptor {
         }
       }),
     );
+  }
+
+  private logError(error: Error): void {
+    logger.error(`[Error] ${error.message}`);
+    logger.error(error.stack);
   }
 }

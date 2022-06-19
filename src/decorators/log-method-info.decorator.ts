@@ -1,3 +1,5 @@
+import logger from '../utils/logger';
+
 export function logMethodInfo(
   target: any,
   propertyKey: string,
@@ -9,7 +11,7 @@ export function logMethodInfo(
   descriptor.value = function (...args: any[]) {
     const datetime = new Date().toLocaleString();
 
-    // console.log(`[Call] ${className}.${propertyKey}(${args.join(', ')})`);
+    logger.info(`[Call] ${className}.${propertyKey}(${args.join(', ')})`);
 
     return method.apply(this, args);
   };

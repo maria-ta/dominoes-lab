@@ -7,6 +7,7 @@ import { PlaceIsTakenError } from '../../models/errors/place-is-taken-error';
 import { CardIsTakenError } from '../../models/errors/card-is-taken-error';
 import { CannotBeSolvedError } from '../../models/errors/cannot-be-solved-error';
 import { logMethodInfo } from '../../decorators/log-method-info.decorator';
+import logger from "../../utils/logger";
 
 @Injectable()
 export class DominoesService {
@@ -24,13 +25,13 @@ export class DominoesService {
 
   @logMethodInfo
   solveProblem(initialTable: number[][]): string[][] {
-    console.log('Starting solving problem');
+    logger.debug('Starting solving problem');
     this.setup(initialTable);
     let counter = 0;
 
     try {
       do {
-        console.log(
+        logger.debug(
           `---------------- Iteration #${counter} -------------------`,
         );
         this.availabilityTable = this.createAvailabilityTable();
@@ -45,10 +46,10 @@ export class DominoesService {
           });
         });
         if (this.shouldBeReverted) {
-          console.log('Solution marked as incorrect. Reverting');
+          logger.debug('Solution marked as incorrect. Reverting');
           this.revert();
         } else {
-          console.log('Availability table');
+          logger.debug('Availability table');
           this.logTable(
             this.availabilityTable.map((row) =>
               row.map((cell) => cell.quantity),
@@ -63,7 +64,7 @@ export class DominoesService {
                 !wasCardTaken &&
                 !this.wasPlaceByCoordinatesTaken(cell.coordinates[0])
               ) {
-                console.log(
+                logger.debug(
                   `Found card with only one possible placement! It's [${[
                     a,
                     b,
@@ -80,12 +81,12 @@ export class DominoesService {
 
           const noCellWasChanged = !this.anyCellWasChanged;
           if (noCellWasChanged) {
-            console.log('No cell was changed');
+            logger.debug('No cell was changed');
             if (this.isProblemSolved()) {
-              console.log('Problem is solved');
+              logger.debug('Problem is solved');
               return this.result;
             } else {
-              console.log('Trying to guess next step');
+              logger.debug('Trying to guess next step');
               this.guess();
             }
           }
@@ -103,7 +104,7 @@ export class DominoesService {
       this.logTable(this.initialTable);
       this.logTable(this.takenCardsTable);
       // this.logGuessingStack();
-      console.log(this.guessingStack.length);
+      logger.debug(this.guessingStack.length);
       throw e;
     }
   }
@@ -120,8 +121,8 @@ export class DominoesService {
     [i, j]: number[],
     [x, y]: number[],
   ): void {
-    // console.log('Update availability of card', Math.max(a, b), Math.min(a, b));
-    // console.log(this.availabilityTable);
+    // logger.debug('Update availability of card', Math.max(a, b), Math.min(a, b));
+    // logger.debug(this.availabilityTable);
     const card = this.availabilityTable[Math.max(a, b)][Math.min(a, b)];
     let sortedCoordinates;
     if (x > i || y > j) {
@@ -151,7 +152,7 @@ export class DominoesService {
    */
   @logMethodInfo
   updateResultWithCoordinates([[a, b], [x, y], [i, j]]: number[][]) {
-    console.log(
+    logger.debug(
       `Setting card [${Math.max(a, b)}, ${Math.min(
         a,
         b,
@@ -254,7 +255,7 @@ export class DominoesService {
    */
   @logMethodInfo
   checkCell(i: number, j: number): void {
-    console.log(`Check cell [${i}, ${j}]`);
+    logger.debug(`Check cell [${i}, ${j}]`);
     const row = this.initialTable[i];
     const cell = row[j];
     // [[a,b], [i,j], [x,y]]
@@ -311,20 +312,20 @@ export class DominoesService {
     }
 
     if (numberOfPossibleVariants === 1) {
-      console.log(`Cell has only one possible neighbour`);
+      logger.debug(`Cell has only one possible neighbour`);
       try {
         this.updateResultWithCoordinates(lastVariant);
         this.anyCellWasChanged = true;
       } catch (e) {
-        console.log('Can not place the card:', e.message);
+        logger.debug('Can not place the card:', e.message);
       }
     } else if (numberOfPossibleVariants === 0) {
-      console.log(
+      logger.debug(
         `Cell has ${numberOfPossibleVariants} neighbours. Solution should be reverted`,
       );
       this.shouldBeReverted = true;
     } else {
-      console.log(`Cell has ${numberOfPossibleVariants} neighbours`);
+      logger.debug(`Cell has ${numberOfPossibleVariants} neighbours`);
       allVariants.forEach(([ab, ij, xy]) => {
         this.updateAvailabilityOfCard(ab, ij, xy);
       });
@@ -336,7 +337,7 @@ export class DominoesService {
     const { ab, cell } = this.findFirstWithMoreThanOnePossibleVariants(except);
     const [a, b] = ab;
     if (cell) {
-      console.log(
+      logger.debug(
         `Found cell with multiple possible placements: [${ab}] with coordinates ${cell.coordinates}`,
       );
       let shouldTryWithOtherCoordinates = false;
@@ -360,7 +361,7 @@ export class DominoesService {
         this.guess([...except, this.getExcept(a, b)]);
       }
     } else {
-      console.log('No cell found. Reverting');
+      logger.debug('No cell found. Reverting');
       this.revert();
     }
   }
@@ -368,10 +369,10 @@ export class DominoesService {
   @logMethodInfo
   revert() {
     if (this.guessingStack.length) {
-      console.log('There are some guesses left');
+      logger.debug('There are some guesses left');
       const previousGuess = this.guessingStack.pop();
       const nextCoordinates = previousGuess.nextGuesses;
-      console.log(
+      logger.debug(
         `Getting previous guess. The card is [${
           previousGuess.ab
         }] and coordinates are ${JSON.stringify(nextCoordinates)}`,
@@ -385,26 +386,26 @@ export class DominoesService {
         let error;
         do {
           try {
-            console.log(`Trying to put card on [${nextCoordinates[0]}]`);
+            logger.debug(`Trying to put card on [${nextCoordinates[0]}]`);
             this.updateResultWithCoordinates([
               previousGuess.ab,
               ...nextCoordinates[0],
             ]);
 
-            console.log(
+            logger.debug(
               'Card put successfully. Remove coordinates from future guesses',
             );
             nextCoordinates.splice(0, 1);
           } catch (e) {
-            console.log('An error occurred: ', e.message);
+            logger.debug('An error occurred: ', e.message);
             error = e;
-            console.log('Will try with next coordinates');
+            logger.debug('Will try with next coordinates');
             nextCoordinates.splice(0, 1);
           }
         } while (error && nextCoordinates.length);
 
         if (nextCoordinates.length) {
-          console.log(
+          logger.debug(
             'Some coordinates options left. Preparing new guess item',
           );
           const guessingStackItem: Guess = {
@@ -422,11 +423,11 @@ export class DominoesService {
           this.guess(previousGuess.except);
         }
       } else {
-        console.log('No coordinates. Reverting');
+        logger.debug('No coordinates. Reverting');
         this.revert();
       }
     } else {
-      console.log('No more guesses left');
+      logger.debug('No more guesses left');
     }
   }
 
@@ -446,7 +447,7 @@ export class DominoesService {
       nextGuesses: cellCoordinatesCopy,
       except,
     };
-    console.log(
+    logger.debug(
       `Put item to guessing stack: [${[
         a,
         b,
@@ -505,9 +506,9 @@ export class DominoesService {
   }
 
   private logTable<T>(table: T[][]): void {
-    console.log('==========================================');
-    console.log('+, ' + table[0].map((cell, i) => i).join(', '));
-    console.log(
+    logger.debug('==========================================');
+    logger.debug('+, ' + table[0].map((cell, i) => i).join(', '));
+    logger.debug(
       table
         .map((row, i) => `${i}, ` + row.map((cell) => cell || '-').join(', '))
         .join('\n'),
@@ -515,15 +516,15 @@ export class DominoesService {
   }
 
   private logGuessingStack(): void {
-    console.log('==========================================');
-    console.log('Guessing stack');
+    logger.debug('==========================================');
+    logger.debug('Guessing stack');
     this.guessingStack.forEach((item, i) => {
-      console.log('-----------------------------------');
-      console.log(`#${i}`);
-      console.log(item.ab);
-      console.log(item.except);
-      console.log(item.nextGuesses);
+      logger.debug('-----------------------------------');
+      logger.debug(`#${i}`);
+      logger.debug(item.ab);
+      logger.debug(item.except);
+      logger.debug(item.nextGuesses);
     });
-    console.log('==========================================');
+    logger.debug('==========================================');
   }
 }
