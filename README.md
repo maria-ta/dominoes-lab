@@ -27,6 +27,8 @@ $ npm run start:prod
 
 After application start, open http://localhost:3000/index.html
 
+In order to view API documentation open http://localhost:3000/api
+
 ## Test
 
 ```bash
