@@ -9,10 +9,7 @@ export function logMethodInfo(
   const method = descriptor.value;
 
   descriptor.value = function (...args: any[]) {
-    const datetime = new Date().toLocaleString();
-
     logger.info(`[Call] ${className}.${propertyKey}(${args.join(', ')})`);
-
     return method.apply(this, args);
   };
 }

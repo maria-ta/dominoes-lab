@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { catchError, Observable } from 'rxjs';
 import { WrongArgumentError } from '../models/errors/wrong-argument-error';
-import logger from "../utils/logger";
+import logger from '../utils/logger';
 
 const DEFAULT_ERROR_MESSAGE = 'An error has occurred';
 

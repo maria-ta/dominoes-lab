@@ -4,7 +4,7 @@ import TABLE_CONSTANTS from '../../constants/table.const';
 import { HelperService } from '../helper/helper.service';
 import { WrongArgumentError } from '../../models/errors/wrong-argument-error';
 import logger from '../../utils/logger';
-import { logMethodInfo } from "../../decorators/log-method-info.decorator";
+import { logMethodInfo } from '../../decorators/log-method-info.decorator';
 
 const MAX_NUMBER_OF_ITERATIONS = 10000;
 const MAX_NUMBER_OF_RETRIES = 100;

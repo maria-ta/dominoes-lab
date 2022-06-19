@@ -7,7 +7,7 @@ import { PlaceIsTakenError } from '../../models/errors/place-is-taken-error';
 import { CardIsTakenError } from '../../models/errors/card-is-taken-error';
 import { CannotBeSolvedError } from '../../models/errors/cannot-be-solved-error';
 import { logMethodInfo } from '../../decorators/log-method-info.decorator';
-import logger from "../../utils/logger";
+import logger from '../../utils/logger';
 
 @Injectable()
 export class DominoesService {

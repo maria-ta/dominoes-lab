@@ -14,6 +14,11 @@ import { GeneratorService } from './services/generator/generator.service';
     }),
   ],
   controllers: [AppController],
-  providers: [HelperService, DominoesService, TableValidatorService, GeneratorService],
+  providers: [
+    HelperService,
+    DominoesService,
+    TableValidatorService,
+    GeneratorService,
+  ],
 })
 export class AppModule {}
