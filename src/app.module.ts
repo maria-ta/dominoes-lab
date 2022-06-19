@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { HelperService } from './services/helper/helper.service';
 import { DominoesService } from './services/dominoes/dominoes.service';
 import { TableValidatorService } from './services/table-validator/table-validator.service';
+import { GeneratorService } from './services/generator/generator.service';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { TableValidatorService } from './services/table-validator/table-validato
     }),
   ],
   controllers: [AppController],
-  providers: [HelperService, DominoesService, TableValidatorService],
+  providers: [HelperService, DominoesService, TableValidatorService, GeneratorService],
 })
 export class AppModule {}

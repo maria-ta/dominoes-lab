@@ -9,24 +9,28 @@
             <h1>Доміно</h1>
 
             <div class="sections">
-                <section class="left-section">
-                    <h2>Умова</h2>
-                    <table id="input-table"></table>
-                </section>
+                <div class="left-section">
+                    <section>
+                        <h2>Умова</h2>
+                        <table id="input-table"></table>
+                    </section>
 
-                <div class="right-section">
                     <section class="taken-cards-table">
                         <h2>Використані картки</h2>
                         <table id="taken-cards-table"></table>
                     </section>
+                </div>
 
-                    <section class="legend">
-                        <h2>Легенда</h2>
+                <div class="right-section">
+                    <section>
+                        <h2>Результат</h2>
+                        <table id="result-table" class="hidden"></table>
+                        <p id="not-solved-message">Натисність кнопку "Вирішити", щоб отримати розв'язок</p>
                     </section>
 
                     <section class="buttons">
                         <button id="submit" class="btn btn-primary">Вирішити</button>
-                        <button id="validate" class="btn btn-secondary">Валідувати</button>
+                        <button id="generate" class="btn btn-secondary">Згенерувати випадкові дані</button>
                     </section>
                 </div>
             </div>

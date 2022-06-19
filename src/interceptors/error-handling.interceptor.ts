@@ -16,6 +16,8 @@ export class ErrorHandlingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       catchError((error) => {
+        console.error(error.message);
+        console.error(error.stack);
         if (error instanceof WrongArgumentError) {
           throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
         } else {

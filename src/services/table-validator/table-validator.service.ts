@@ -14,7 +14,7 @@ export class TableValidatorService {
       throw new WrongArgumentError('Invalid cell(s) in initial table');
     } else if (this.hasAnInvalidNumberOfValuesOccurrence(initialTable)) {
       throw new WrongArgumentError(
-        'Invalid initial table. No solution available',
+        'Invalid number of values occurrence. No solution available',
       );
     }
   }
@@ -41,7 +41,7 @@ export class TableValidatorService {
     initialTable: number[][],
   ): boolean {
     const numberOfDifferentValues =
-      TABLE_CONSTANTS.maxCellValue - TABLE_CONSTANTS.minCellValue;
+      TABLE_CONSTANTS.maxCellValue - TABLE_CONSTANTS.minCellValue + 1;
     const numbersOfValuesOccurrence =
       this.helperService.createZeroFilledArrayOfLength(numberOfDifferentValues);
 

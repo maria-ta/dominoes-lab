@@ -79,7 +79,7 @@ td.taken {
     background-color: #7EB09B;
 }
 
-td.not-taken {
+td.not-taken, td.warn {
     background-color: #FAC05E;
 }
 
@@ -97,4 +97,8 @@ td input {
 
 .left-section {
     margin-right: 3rem;
+}
+
+.hidden {
+    display: none !important;
 }
