@@ -40,4 +40,23 @@ describe('GeneratorService', () => {
       expect(dataGeneratedSecondTime).not.toEqual(dataGeneratedFirstTime);
     });
   });
+
+  describe('#generateInalidData', () => {
+    it('should generate invalid data', () => {
+      const generatedData = service.generateInvalidData();
+
+      try {
+        tableValidatorService.checkTable(generatedData.numbers);
+      } catch (e) {
+        expect(e).toBeTruthy();
+      }
+    });
+
+    it('should generate unique data', () => {
+      const dataGeneratedFirstTime = service.generateInvalidData();
+      const dataGeneratedSecondTime = service.generateInvalidData();
+
+      expect(dataGeneratedSecondTime).not.toEqual(dataGeneratedFirstTime);
+    });
+  });
 });
