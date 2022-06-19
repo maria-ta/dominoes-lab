@@ -25,6 +25,8 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+After application start, open http://localhost:3000/index.html
+
 ## Test
 
 ```bash
