@@ -116,7 +116,7 @@ export class DominoesService {
    * @param coordinates2 in format [number, number]
    */
   @logMethodInfo
-  updateAvailabilityOfCard(
+  private updateAvailabilityOfCard(
     [a, b]: number[],
     [i, j]: number[],
     [x, y]: number[],
@@ -151,7 +151,7 @@ export class DominoesService {
    * @param card [card, cardCoordinates1, cardCoordinates2]
    */
   @logMethodInfo
-  updateResultWithCoordinates([[a, b], [x, y], [i, j]]: number[][]) {
+  private updateResultWithCoordinates([[a, b], [x, y], [i, j]]: number[][]) {
     logger.debug(
       `Setting card [${Math.max(a, b)}, ${Math.min(
         a,
@@ -206,7 +206,7 @@ export class DominoesService {
    * @returns an array filled with default values for an `availabilityTable`: `{quantity: 0, coordinates: []}`
    */
   @logMethodInfo
-  createAvailabilityTable(): Cell[][] {
+  private createAvailabilityTable(): Cell[][] {
     return this.helperService
       .createZeroFilledArrayOfLength(
         TABLE_CONSTANTS.maxCellValue - TABLE_CONSTANTS.minCellValue + 1,
@@ -227,7 +227,7 @@ export class DominoesService {
    * @returns false when there is an empty cell in result, else returns true
    */
   @logMethodInfo
-  isProblemSolved(): boolean {
+  private isProblemSolved(): boolean {
     for (let i = 0; i < this.result.length; i++) {
       for (let j = 0; j < this.result.length; j++) {
         if (!this.result[i][j]) {
@@ -243,7 +243,7 @@ export class DominoesService {
    * @returns true when result cell on [x, y] or [i, j] is not empty
    */
   @logMethodInfo
-  wasPlaceByCoordinatesTaken(coordinates: number[][]): boolean {
+  private wasPlaceByCoordinatesTaken(coordinates: number[][]): boolean {
     const [[x, y], [i, j]] = coordinates;
     return !!this.result[x][y] || !!this.result[i][j];
   }
@@ -254,7 +254,7 @@ export class DominoesService {
    * @param j
    */
   @logMethodInfo
-  checkCell(i: number, j: number): void {
+  private checkCell(i: number, j: number): void {
     logger.debug(`Check cell [${i}, ${j}]`);
     const row = this.initialTable[i];
     const cell = row[j];
@@ -333,7 +333,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  guess(except: string[] = []) {
+  private guess(except: string[] = []) {
     const { ab, cell } = this.findFirstWithMoreThanOnePossibleVariants(except);
     const [a, b] = ab;
     if (cell) {
@@ -367,7 +367,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  revert() {
+  private revert() {
     if (this.guessingStack.length) {
       logger.debug('There are some guesses left');
       const previousGuess = this.guessingStack.pop();
@@ -436,7 +436,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  updateGuessingStack([a, b], cell, except: string[] = []) {
+  private updateGuessingStack([a, b], cell, except: string[] = []) {
     const cellCoordinatesCopy = JSON.parse(JSON.stringify(cell.coordinates));
     cellCoordinatesCopy.splice(0, 1);
     const guessingStackItem: Guess = {
@@ -457,7 +457,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  findFirstWithMoreThanOnePossibleVariants(except): {
+  private findFirstWithMoreThanOnePossibleVariants(except): {
     ab: number[];
     cell: Cell;
   } {
@@ -511,18 +511,5 @@ export class DominoesService {
         .map((row, i) => `${i}, ` + row.map((cell) => cell || '-').join(', '))
         .join('\n'),
     );
-  }
-
-  private logGuessingStack(): void {
-    logger.debug('==========================================');
-    logger.debug('Guessing stack');
-    this.guessingStack.forEach((item, i) => {
-      logger.debug('-----------------------------------');
-      logger.debug(`#${i}`);
-      logger.debug(item.ab);
-      logger.debug(item.except);
-      logger.debug(item.nextGuesses);
-    });
-    logger.debug('==========================================');
   }
 }
