@@ -21,7 +21,7 @@ export class TableValidatorService {
 
   private isOfIncorrectSize(initialTable: number[][]): boolean {
     return (
-      initialTable.length > TABLE_CONSTANTS.height ||
+      initialTable.length !== TABLE_CONSTANTS.height ||
       initialTable.some((row) => row.length !== TABLE_CONSTANTS.width)
     );
   }

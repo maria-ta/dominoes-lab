@@ -25,12 +25,12 @@ export class AppController {
   ) {}
 
   @Get('health')
-  health(): boolean {
+  getHealth(): boolean {
     return true;
   }
 
   @Get('conditions')
-  conditions(): {
+  getConditions(): {
     width: number;
     height: number;
     maxCellValue: number;

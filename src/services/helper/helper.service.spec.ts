@@ -15,4 +15,20 @@ describe('HelperService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  describe('#createZeroFilledArrayOfLength', () => {
+    const length = 5;
+
+    it('should return an array of specified length', () => {
+      const result = service.createZeroFilledArrayOfLength(length);
+
+      expect(result.length).toEqual(length);
+    });
+
+    it('should return an array filled with 0', () => {
+      const result = service.createZeroFilledArrayOfLength(length);
+
+      expect(result.every((i) => i === 0)).toBe(true);
+    });
+  });
 });
