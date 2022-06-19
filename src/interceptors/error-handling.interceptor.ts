@@ -22,7 +22,7 @@ export class ErrorHandlingInterceptor implements NestInterceptor {
           throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
         } else {
           throw new HttpException(
-            error?.message || DEFAULT_ERROR_MESSAGE,
+            error.message || DEFAULT_ERROR_MESSAGE,
             HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }

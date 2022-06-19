@@ -1,0 +1,22 @@
+{
+  "preset": "ts-jest",
+  "collectCoverageFrom": [
+    "src/**/*.ts"
+  ],
+  "coveragePathIgnorePatterns": [
+    "node_modules",
+    "interfaces",
+    ".mock.ts",
+    ".module.ts",
+    "main.ts"
+  ],
+  "coverageDirectory": "<rootDir>/coverage/",
+  "coverageThreshold": {
+    "global": {
+      "branches": 94,
+      "functions": 94,
+      "lines": 94,
+      "statements": 94
+    }
+  }
+}
