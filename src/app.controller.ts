@@ -7,7 +7,6 @@ import {
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
-import { DominoesService } from './services/dominoes/dominoes.service';
 import { DefaultFilter } from './filters/default.filter';
 import { ErrorHandlingInterceptor } from './interceptors/error-handling.interceptor';
 import { TableValidatorService } from './services/table-validator/table-validator.service';
@@ -17,13 +16,14 @@ import { GeneratorService } from './services/generator/generator.service';
 import { InitialTableDto } from './dto/initial-table.dto';
 import { TableConstantsDto } from './dto/table-constants.dto';
 import { ApiResponse } from '@nestjs/swagger';
+import { ProducerService } from './services/producer/producer.service';
 
 @Controller()
 @UseInterceptors(ErrorHandlingInterceptor)
 @UseFilters(new DefaultFilter())
 export class AppController {
   constructor(
-    private readonly dominoesService: DominoesService,
+    private readonly producerService: ProducerService,
     private readonly tableValidatorService: TableValidatorService,
     private readonly generatorService: GeneratorService,
   ) {}
@@ -48,9 +48,10 @@ export class AppController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Incorrect initial table',
   })
-  solve(@Body() initialTableDto: InitialTableDto): string[][] {
+  solve(@Body() initialTableDto: InitialTableDto): InitialTableDto {
     const initialTable = initialTableDto.initialTable;
     this.tableValidatorService.checkTable(initialTable);
-    return this.dominoesService.solveProblem(initialTable);
+    this.producerService.solve(initialTableDto);
+    return initialTableDto;
   }
 }

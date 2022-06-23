@@ -307,13 +307,11 @@ function setupInitialTable() {
 }
 
 function submitInitialTable() {
-  post(`${BASE_URL}/solve`, { initialTable: initialTable.numbers })
-    .then((result) => {
-      showResult(result);
-    })
-    .catch((error) => {
+  post(`${BASE_URL}/solve`, { initialTable: initialTable.numbers }).catch(
+    (error) => {
       console.error(error);
-    });
+    },
+  );
 }
 
 // ------------------------- Taken cards table ------------------------
@@ -443,6 +441,17 @@ function hideResult() {
   showNotSolvedMessage();
 }
 
+// ------------------------- Socket ------------------------
+
+function initSocket() {
+  this.socket = io('http://localhost:3000');
+
+  this.socket.on('result', (result) => {
+    console.log('result', result);
+    showResult(result);
+  });
+}
+
 // ------------------------- Entry points ------------------------
 
 getConditions().then((response) => {
@@ -462,3 +471,5 @@ document
   .addEventListener('click', () => {
     generateValidData();
   });
+
+initSocket();

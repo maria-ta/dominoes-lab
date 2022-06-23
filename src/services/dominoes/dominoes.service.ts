@@ -95,8 +95,10 @@ export class DominoesService {
       } while (this.anyCellWasChanged && counter < 15000);
 
       if (this.isProblemSolved()) {
+        logger.debug('Problem is solved. Returning result');
         return this.result;
       } else {
+        logger.debug('Problem cannot be solved. Throwing an error');
         throw new CannotBeSolvedError();
       }
     } catch (e) {
