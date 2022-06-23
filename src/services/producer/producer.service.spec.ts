@@ -1,18 +1,33 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProducerService } from './producer.service';
+import { InitialTableDto } from '../../dto/initial-table.dto';
 
 describe('AppService', () => {
   let service: ProducerService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ProducerService],
-    }).compile();
+  let queueMock;
 
-    service = module.get<ProducerService>(ProducerService);
+  beforeEach(async () => {
+    queueMock = {
+      add: jest.fn(),
+    } as any;
+
+    service = new ProducerService(queueMock);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('#solve', () => {
+    it('should add problem to queue', async () => {
+      const initialTableDto: InitialTableDto = {
+        initialTable: [[1]],
+      };
+
+      await service.solve(initialTableDto);
+
+      expect(queueMock.add).toHaveBeenCalledWith(initialTableDto);
+    });
   });
 });

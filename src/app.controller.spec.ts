@@ -4,17 +4,18 @@ import { GeneratorService } from './services/generator/generator.service';
 import { DominoesService } from './services/dominoes/dominoes.service';
 import { TableValidatorService } from './services/table-validator/table-validator.service';
 import TABLE_CONSTANTS from './constants/table.const';
+import { ProducerService } from './services/producer/producer.service';
 
 describe('AppController', () => {
   let appController: AppController;
 
-  let dominoesServiceMock;
+  let producerServiceMock;
   let generatorServiceMock;
   let tableValidatorServiceMock;
 
   beforeEach(async () => {
-    dominoesServiceMock = {
-      solveProblem: jest.fn(),
+    producerServiceMock = {
+      solve: jest.fn(),
     };
     generatorServiceMock = {
       generateValidData: jest.fn(),
@@ -25,7 +26,7 @@ describe('AppController', () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
       providers: [
-        { provide: DominoesService, useValue: dominoesServiceMock },
+        { provide: ProducerService, useValue: producerServiceMock },
         { provide: GeneratorService, useValue: generatorServiceMock },
         { provide: TableValidatorService, useValue: tableValidatorServiceMock },
       ],
@@ -62,14 +63,11 @@ describe('AppController', () => {
     });
 
     it('should solve the problem', () => {
-      const expectedSolution = [];
-      dominoesServiceMock.solveProblem.mockReturnValue(expectedSolution);
+      const initialTableDto = { initialTable: [] };
 
-      appController.solve({ initialTable: [] });
+      appController.solve(initialTableDto);
 
-      expect(appController.solve({ initialTable: [] })).toEqual(
-        expectedSolution,
-      );
+      expect(producerServiceMock.solve).toHaveBeenCalledWith(initialTableDto);
     });
   });
 });
