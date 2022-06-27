@@ -5,11 +5,13 @@
 Homework for **Software engineering methodologies** course.
 
 Node.js and npm are required to run the project. [Install Node.js and npm](https://nodejs.org/en/).
+Docker is required to run the project. [Install Docker](https://www.docker.com/).
 
 ## Installation
 
 ```bash
 $ npm install
+$ npm run docker:compose
 ```
 
 ## Running the app
