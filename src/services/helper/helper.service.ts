@@ -7,7 +7,7 @@ export class HelperService {
    * @param {number} length
    * @returns {number[]} an array of specified length filled with `0`
    */
-  createZeroFilledArrayOfLength(length) {
+  createZeroFilledArrayOfLength(length: number): number[] {
     return [...Array(length)].map(Number.prototype.valueOf, 0);
   }
 }

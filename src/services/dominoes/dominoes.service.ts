@@ -11,15 +11,15 @@ import logger from '../../utils/logger';
 
 @Injectable()
 export class DominoesService {
-  initialTable: number[][];
-  result: string[][];
-  availabilityTable: Cell[][];
-  takenCardsTable: number[][];
+  private initialTable: number[][];
+  private result: string[][];
+  private availabilityTable: Cell[][];
+  private takenCardsTable: number[][];
 
-  guessingStack: Guess[];
+  private guessingStack: Guess[];
 
-  anyCellWasChanged = false;
-  shouldBeReverted = false;
+  private anyCellWasChanged = false;
+  private shouldBeReverted = false;
 
   constructor(private readonly helperService: HelperService) {}
 
@@ -153,7 +153,7 @@ export class DominoesService {
    * @param card [card, cardCoordinates1, cardCoordinates2]
    */
   @logMethodInfo
-  private updateResultWithCoordinates([[a, b], [x, y], [i, j]]: number[][]) {
+  private updateResultWithCoordinates([[a, b], [x, y], [i, j]]: number[][]): void {
     logger.debug(
       `Setting card [${Math.max(a, b)}, ${Math.min(
         a,
@@ -335,7 +335,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  private guess(except: string[] = []) {
+  private guess(except: string[] = []): void {
     const { ab, cell } = this.findFirstWithMoreThanOnePossibleVariants(except);
     const [a, b] = ab;
     if (cell) {
@@ -369,7 +369,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  private revert() {
+  private revert(): void {
     if (this.guessingStack.length) {
       logger.debug('There are some guesses left');
       const previousGuess = this.guessingStack.pop();
@@ -438,7 +438,7 @@ export class DominoesService {
   }
 
   @logMethodInfo
-  private updateGuessingStack([a, b], cell, except: string[] = []) {
+  private updateGuessingStack([a, b], cell, except: string[] = []): void {
     const cellCoordinatesCopy = JSON.parse(JSON.stringify(cell.coordinates));
     cellCoordinatesCopy.splice(0, 1);
     const guessingStackItem: Guess = {
