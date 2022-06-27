@@ -21,9 +21,7 @@
     "test:cov": "jest --config jest.config.json --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "redis:pull": "docker pull redis/redis-stack",
-    "redis:run": "docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest",
-    "redis:start": "docker container start redis-stack-server"
+    "docker:compose": "docker-compose up -d"
   },
   "dependencies": {
     "@nestjs/bull": "^0.5.5",

@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+  jenkins:
+    image: docker.io/bitnami/jenkins:latest
+    ports:
+      - '4300:4400'
+    environment:
+      - JENKINS_PASSWORD=bitnami
+      - JENKINS_EXTERNAL_HTTP_PORT_NUMBER=4300
+      - JENKINS_EXTERNAL_HTTPS_PORT_NUMBER=4301
+      - JENKINS_HTTP_PORT_NUMBER=4400
+      - JENKINS_HTTPS_PORT_NUMBER=4401
+    volumes:
+      - 'jenkins_data:/bitnami/jenkins'
+  redis:
+    image: 'redis/redis-stack-server:latest'
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always
+    hostname: 'localhost'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:4200'
+        gitlab_rails['gitlab_shell_ssh_port'] = 4201
+    ports:
+      - '4200:4200'
+      - '443:443'
+      - '4201:22'
+    volumes:
+      - '$GITLAB_HOME/config:/etc/gitlab'
+      - '$GITLAB_HOME/logs:/var/log/gitlab'
+      - '$GITLAB_HOME/data:/var/opt/gitlab'
+    shm_size: '256m'
+
+volumes:
+  jenkins_data:
+    driver: local
+  redis_data:
+    driver: local
