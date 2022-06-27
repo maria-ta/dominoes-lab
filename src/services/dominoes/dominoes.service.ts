@@ -153,7 +153,11 @@ export class DominoesService {
    * @param card [card, cardCoordinates1, cardCoordinates2]
    */
   @logMethodInfo
-  private updateResultWithCoordinates([[a, b], [x, y], [i, j]]: number[][]): void {
+  private updateResultWithCoordinates([
+    [a, b],
+    [x, y],
+    [i, j],
+  ]: number[][]): void {
     logger.debug(
       `Setting card [${Math.max(a, b)}, ${Math.min(
         a,

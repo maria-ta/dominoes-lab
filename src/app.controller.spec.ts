@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { GeneratorService } from './services/generator/generator.service';
-import { DominoesService } from './services/dominoes/dominoes.service';
 import { TableValidatorService } from './services/table-validator/table-validator.service';
 import TABLE_CONSTANTS from './constants/table.const';
 import { ProducerService } from './services/producer/producer.service';

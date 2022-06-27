@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ProducerService } from './producer.service';
 import { InitialTableDto } from '../../dto/initial-table.dto';
 
